@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	    <meta charset="utf-8">
+		
+	    <meta name="viewport" content="width=device-width, initial-scale=1">
+	
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	
+		<link rel="stylesheet" href="style.css">
+		<title>Zobacz</title>
+
+	</head>
+	<body>
+		
+		<script src="https://www.gstatic.com/firebasejs/6.1.0/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/6.1.0/firebase-auth.js"></script>
+		   
+		<script defer src="./init-firebase.js"></script>
+	
+	<div class="container">
+       <div class="wrapper">
+           <div id="form-main" class="form-main">
+	 
+                <div id="login" class="visible">
+                    <div class="form-header">
+                        <h1>Login</h1>
+                    </div>
+                        <p>
+                            <input type="email" name="stEmail" placeholder="Email" onblur="checkEmail(this.value, 'logMailMesg')">
+			    <p id='logMailMesg'></p>
+                        </p>
+                        <p>
+                            <input type="password" name="stPass" placeholder="Password" onblur="checkPass(this.value, 'logPassMesg')">
+			    <p id='logPassMesg'></p>
+                        <p>
+                            <button  id="btnSendLogin" class="btn">Log In</button>
+                        </p>
+                        <p class="form-footer">
+                            Don't have an account? <button id="btnChangeRegister" class="btn-footer" onclick="registerVisible()">Register</button>
+                        </p>
+                </div>  
+		
+            </div>
+       </div>
+    </div>
+    
+    
+    <p id='erM'></p>
+    <script src="main.js"></script>
+	</body>
+</html>
