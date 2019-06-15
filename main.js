@@ -545,3 +545,278 @@ function pobierzPodkategorie2(nazwaKategorii, lon, lat, parentId) {
 	pobPod.open("GET", "https://www.overpass-api.de/api/interpreter?data=[out:csv('"+nazwaKategorii+"')][timeout:25];rel['"+nazwaKategorii+"'](around:5000, "+lon+", "+lat+");out%20body;%3E;out%20skel%20qt;", true);
 	pobPod.send();
 }
+
+function CSVDoTablicy(daneCSV, delimiter, iloscZnakow) {
+	var nDelimiter='';
+	var nowaLinia='\n';
+	var cudzyslow = '\"';
+	var zCudzyslow = 0;
+	var i;
+	var koniecDanych='';
+	var znak = daneCSV.charAt(i);
+	var tablicaWiersz = [];
+	var tablicaKolumna = [];
+	var zdanie = '';
+
+	
+	if (delimiter == undefined || delimiter.length == 0) {
+		nDelimiter="";
+	} else {
+		nDelimiter=delimiter;
+	}
+	var ostatCzlon = iloscZnakow - 1;
+	
+	for (i = 0;  i < iloscZnakow; i++) {
+		znak = daneCSV.charAt(i);
+		var ciag = ciag + znak;
+			if (znak ==  nowaLinia) {
+				tablicaKolumna[tablicaKolumna.length]=zdanie + "\n";
+				tablicaWiersz[tablicaWiersz.length]=tablicaKolumna.toString();
+				if ( i == ostatCzlon ) {
+						return tablicaWiersz;
+				}
+				tablicaKolumna.splice(0,tablicaKolumna.length);
+				zdanie='';
+				
+			} else if (znak == cudzyslow && zCudzyslow==0) {
+				zCudzyslow=1;
+			} else if (znak != cudzyslow && zCudzyslow==1) {
+				if (znak != nowaLinia || znak != nDelimiter) {
+					zdanie += znak;
+				}
+			} else if (znak == cudzyslow && zCudzyslow==1) {
+				zCudzyslow=0;
+			} else if (znak == nDelimiter && zCudzyslow==0 && znak != '') {
+				tablicaKolumna[tablicaKolumna.length]=zdanie;
+				zdanie='';
+			} else if (zCudzyslow==0 && (znak == '  ' || znak == '\t' || znak == '\r')) {
+
+			} else if (zCudzyslow==0 && (znak != nowaLinia || znak != nDelimiter)) {
+					zdanie += znak;
+			}
+		
+	}
+}
+
+function podKatSel(tablica, parentId) {
+	var createSelect = document.createElement("select");
+	createSelect.setAttribute("name", "nazwaPodkategorii");
+	createSelect.setAttribute("id", "nazwaPodkategorii");
+	createSelect.setAttribute("size", "3");
+	parentId.appendChild(createSelect);
+	tablica.forEach(podKatOptGen);
+}
+
+function podKatOptGen(wartosc) {
+	var createOption = document.createElement("option");
+	createOption.setAttribute("value", wartosc);
+	createOption.setAttribute("onclick", "pobierzListaObiektow(this.value, 'info')");
+	createOption.innerHTML=wartosc;
+	var parentIdGet=document.getElementById('nazwaPodkategorii');
+	parentIdGet.appendChild(createOption);
+}
+
+
+
+function pobierzListaObiektow(nazwaPodkategorii, parentId) {
+	
+	if (document.getElementById('WLoc')) {
+		var nazwaMiasta=document.getElementById('WLoc').value;
+	}
+	var nazwaKategorii=document.getElementById('nazwaKategorii').value;
+	
+	if (document.getElementById('coor1') && document.getElementById('coor2')) {
+		var lon = document.getElementById('coor1').value;
+		var lat = document.getElementById('coor2').value;
+	}
+	var pobPod = new XMLHttpRequest();
+	pobPod.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var objJSON = JSON.parse(this.responseText);
+			var objJElem = objJSON.elements;
+			 jToA(objJElem)
+		}
+	};
+	if (document.getElementById('WLoc')) {
+		pobPod.open("GET", "https://www.overpass-api.de/api/interpreter?data=[out:json][timeout:25];(area[name='"+nazwaMiasta+"'];)-%3E.searchArea;(node['"+nazwaKategorii+"'='"+nazwaPodkategorii+"'](area.searchArea);relation['"+nazwaKategorii+"'='"+nazwaPodkategorii+"'](area.searchArea););out%20body;", true);
+	} else if (document.getElementById('coor1') && document.getElementById('coor2')) {
+		pobPod.open("GET", "https://www.overpass-api.de/api/interpreter?data=[out:json][timeout:25];node['"+nazwaKategorii+"'='"+nazwaPodkategorii+"'](around:1000, "+lat+", "+lon+");relation['"+nazwaKategorii+"'='"+nazwaPodkategorii+"'](around:1000, "+lat+", "+lon+");out%20body;%3E;out%20skel%20qt;", true);
+	}
+	pobPod.send();
+}
+
+function jToA(objekt) {
+	var tablicaObjId = []
+	var tablicaNazwa = [];
+	var tablicaWikipedia = [];
+	var tablicaLat = [];
+	var tablicaLon = [];
+	
+	for ( x in objekt) {
+		var objL1=objekt[x];
+		if ( typeof objL1.tags != "undefined" ) {
+			tablicaObjId[tablicaObjId.length] = objL1.id;
+			tablicaNazwa[tablicaNazwa.length] = objL1.tags.name;
+			tablicaWikipedia[tablicaWikipedia.length] = objL1.tags.wikipedia;
+			tablicaLat[tablicaLat.length] = objL1.lat;
+			tablicaLon[tablicaLon.length]  = objL1.lon;
+		}
+	}
+	createSiteObject(tablicaObjId, tablicaNazwa, tablicaWikipedia, tablicaLat, tablicaLon);
+}
+
+function createSiteObject(id, nazwa, wikipedia, lat, lon) {
+	var wlkTablicy=nazwa.length;
+	var i;
+	destField('info', 'info1'); 	
+	var parentIdMain=document.getElementById('info');
+	var parentIdGet = document.createElement("div");
+	parentIdGet.setAttribute("id", 'info1');
+	parentIdMain.appendChild(parentIdGet);
+	
+	for ( i = 0; i < wlkTablicy; i++) {
+		var createObj = document.createElement("a");
+		var newWikiName;
+		createObj.setAttribute("href", '#map');
+		createObj.setAttribute("id", id[i]);
+		if ( typeof(wikipedia[i]) != 'undefined' ) {
+			tmpWiki = wikipedia[i];
+			newWikiName = '"' + tmpWiki + '"';
+		} else {
+			newWikiName = "'brak'";
+		}
+		if ( typeof(lon[i]) != 'undefined' && typeof(lon[i]) != 'undefined') {
+			createObj.setAttribute("onclick", "showObjMap("+lon[i]+", "+lat[i]+"), createWikiInfo("+newWikiName+")");
+		} else {
+			createObj.setAttribute("onclick", "showObjMap('brak', 'brak'), createWikiInfo("+newWikiName+")");
+		}
+		if ( typeof(nazwa[i]) !== 'undefined' ) {
+			createObj.innerHTML=nazwa[i];
+		} else {
+			createObj.innerHTML='Nazwa nieznana';
+		}
+		
+		parentIdGet.appendChild(createObj);
+		createBr=document.createElement("br");
+		parentIdGet.appendChild(createBr);
+	}
+}
+
+function showObjMap(lon, lat) {
+	
+	destField('map', 'map1'); 	
+	
+	var createMap = document.createElement("div");
+	createMap.setAttribute("id", 'map1');
+	var parentIdGet=document.getElementById('map');
+	parentIdGet.appendChild(createMap);
+	
+	if ( lon != 'brak' && lon != 'brak' ) {
+		var polyFeature = new ol.Feature({
+		    geometry: new ol.geom.Point([lon, lat]),
+		    projection: 'EPSG:4326'
+		}); 
+
+		var vectorLayer = new ol.layer.Vector({
+		    source: new ol.source.Vector({
+			features: [polyFeature]
+		    })
+		});
+		var osmLayer = new ol.layer.Tile({
+		source: new ol.source.OSM()
+		});
+
+		var view = new ol.View({
+		projection: 'EPSG:4326',
+		zoom: 18
+		});
+		view.setCenter([lon, lat]);
+
+		var map = new ol.Map({
+		target: 'map1',
+		view:view,
+		layers: [ osmLayer,vectorLayer]
+		});
+		map.setView(view);
+
+		var geometryM = polyFeature.getGeometry();
+		var coordinate = geometryM.getCoordinates();
+		
+		
+		var startMarker = new ol.Feature({
+			type: 'icon',
+			geometry: new ol.geom.Point(coordinate)
+		});
+	} else {
+		var createMapU = document.createElement("p");
+		createMapU.innerHTML='Brak danych';
+		createMap.appendChild(createMapU);
+	}
+}
+
+function createWikiInfo(nazwa) {
+	destField('wiki', 'wiki1'); 
+	var createWiki = document.createElement("div");
+	createWiki.setAttribute("id", 'wiki1');
+	var parentIdGet=document.getElementById('wiki');
+	parentIdGet.appendChild(createWiki);
+	if (nazwa != 'brak') {
+		var sName = nazwa.split(":");
+		var SNameOne = sName[0];
+		var SNameTwo = sName[1];
+	} else {
+		var SNameOne = "brak";
+		var SNameTwo = "brak";
+	}
+	pobierzDaneWiki(SNameOne, SNameTwo);
+	
+}
+
+function pobierzDaneWiki(nazwa1, nazwa2) {
+	var textPart;
+	if (nazwa1 != 'brak') {
+		var newNazwaWiki = nazwa2.replace(/ /g, "%20");
+		var pobPod = new XMLHttpRequest();
+		pobPod.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var objJSON = JSON.parse(this.responseText);
+				var x = 0;
+				var jLvl1;
+				var jLvl2=[];
+				for (i in objJSON.query.pages) {
+					for (j in objJSON.query.pages[i].revisions) {
+						jLvl1=objJSON.query.pages[i].revisions[j];
+						for (k in jLvl1) {
+							jLvl2[x]=jLvl1[k];
+							x++;
+						}
+					}
+					
+				}
+				var textIndex=jLvl2[2].search("Category");
+				textPart=jLvl2[2].slice(textIndex, textIndex + 1000);
+				wyswitlInfoWiki(textPart, nazwa1, newNazwaWiki);
+			}
+		};
+		pobPod.open("GET", "https://"+nazwa1+".wikipedia.org/w/api.php?action=query&titles="+nazwa2+"&prop=revisions&rvprop=content&format=json&origin=*", true);
+		pobPod.send();
+	} else {
+		textPart = "Brak informacji w wikipedia";
+		wyswitlInfoWiki(textPart, "brak", "brak");
+	}
+	
+}
+
+function wyswitlInfoWiki(tekst, kraj, tytul) {
+	var parentIdGet=document.getElementById('wiki1');
+	var createWikiField= document.createElement("p");
+	createWikiField.innerHTML=tekst;
+	parentIdGet.appendChild(createWikiField);
+	if (kraj != 'brak') {
+		var createWikiLink= document.createElement("a");
+		createWikiLink.setAttribute("href", 'https://'+kraj+'.wikipedia.org/wiki/'+tytul);
+		createWikiLink.setAttribute("target", "_blank");
+		createWikiLink.innerHTML="Więcej w artykule na wikipedii";
+		parentIdGet.appendChild(createWikiLink);
+	}
+}
