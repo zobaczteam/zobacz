@@ -291,3 +291,178 @@ function checkChecked(wartosc) {
 		document.getElementById("wybMap").removeAttribute("checked");
 	}
 }
+
+function getLocGPS() {
+	destField('search-bar', 'wyborMiejsce');
+	destField('search-bar', 'wyborMapa');
+	destField('search-bar', 'wyborGPSK');
+	destField('search-bar', 'wyborKategorii');
+	destField('search-bar', 'wyborPodkategorii');
+	var parentIdGetMain=document.getElementById('search-bar');
+	var createBlockMap = document.createElement("div");
+	createBlockMap.setAttribute("id", "wyborGPS");
+	parentIdGetMain.appendChild(createBlockMap);
+	var createBlockC = document.createElement("div");
+	createBlockC.setAttribute("id", "wyborGPSK");
+	createBlockMap.appendChild(createBlockC);
+	
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(showPosition);
+	} else { 
+		var createBlockP = document.createElement("p");
+		createBlockP.innerHTML='Brak dostępu do GPS'
+		createBlockMap.appendChild(createBlockP);
+	}
+}
+
+function showPosition(position) {
+	var lat = position.coords.latitude; 
+	var lon = position.coords.longitude;
+	
+	var element = document.getElementById('wyborGPSK');
+	element.innerText =  "Twoje współrzędne geograficzne: "+lat+" "+ lon;
+	var createBlockH1 = document.createElement("input");
+	createBlockH1.setAttribute("id", "coor1");
+	createBlockH1.setAttribute("type", "hidden");
+	createBlockH1.setAttribute("value", lat);
+	element.appendChild(createBlockH1);
+	var createBlockH2 = document.createElement("input");
+	createBlockH2.setAttribute("id", "coor2");
+	createBlockH2.setAttribute("type", "hidden");
+	createBlockH2.setAttribute("value", lon);
+	element.appendChild(createBlockH2);
+	createKategory('search-bar');
+}
+
+function createBMap(parentId) {
+	destField('search-bar', 'wyborMiejsce');
+	destField('search-bar', 'wyborMapa');
+	destField('search-bar', 'wyborGPSK');
+	destField('search-bar', 'wyborKategorii');
+	destField('search-bar', 'wyborPodkategorii');
+	var parentIdGetMain=document.getElementById('search-bar');
+	var createBlockMap = document.createElement("div");
+	createBlockMap.setAttribute("id", "wyborMapa");
+	parentIdGetMain.appendChild(createBlockMap);
+	var createBlockP = document.createElement("h4");
+	createBlockP.innerHTML='Wybierz miejsce na mapie'
+	createBlockMap.appendChild(createBlockP);
+	var createBlockC = document.createElement("div");
+	createBlockC.setAttribute("id", "wyborMapK");
+	createBlockMap.appendChild(createBlockC);
+	showMapSetView();
+	
+}
+
+function showMapPoly() {
+	var polyFeature = new ol.Feature({
+		geometry: new ol.geom.Point([19.129808, 50.618671]),
+		projection: 'EPSG:4326'
+	
+	}); 
+	return polyFeature;
+}
+
+function showMapVector() {
+	var polyFeature = showMapPoly();
+	var vectorLayer = new ol.layer.Vector({
+	    source: new ol.source.Vector({
+		features: [polyFeature]
+	    })
+	});
+	return vectorLayer;
+}
+
+function showMapOSML() {
+	var osmLayer = new ol.layer.Tile({
+	source: new ol.source.OSM()
+	});
+	return osmLayer;
+}
+
+function showMapView() {
+	var view = new ol.View({
+	projection: 'EPSG:4326',
+	zoom: 18
+	});
+	view.setCenter([19.128499, 50.617803]);
+	return view;
+}
+
+
+function showMapGenMap() {
+	var osmLayer = showMapOSML();
+	var vectorLayer = showMapVector();
+	var view = showMapView();
+
+		var map = new ol.Map({
+			target: 'wyborMapa',
+			view: view,
+			layers: [ osmLayer,vectorLayer]
+		});
+		return map;
+}
+
+function showMapSetView() {
+	var map = showMapGenMap();
+	var view = showMapView();
+	map.setView(view);
+	
+	var addMap = document.getElementById('wyborMapa');
+	 addMap.addEventListener('click', function(){getCorMap(map), createKategory('search-bar')});
+}
+
+function getCorMap(nowaMapa) {
+	var polyFeature = showMapPoly();
+	var map = nowaMapa;
+	var getCoorM;
+		var geometry = polyFeature.getGeometry();
+		var coordinate = geometry.getCoordinates();
+		
+		
+		map.on('click', function(evt){
+			getCoorM = evt.coordinate;
+			var i = 0;
+			var tablica=[];
+			for (x in getCoorM) {
+			tablica[i]=getCoorM[x];
+			i++;
+		}
+		
+			var element = document.getElementById('wyborMapK');
+			element.innerText =  "Współrzędne geograficzne wybranego punktu: "+tablica[0]+" "+tablica[1];
+			var createBlockH1 = document.createElement("input");
+			createBlockH1.setAttribute("id", "coor1");
+			createBlockH1.setAttribute("type", "hidden");
+			createBlockH1.setAttribute("value", tablica[0]);
+			element.appendChild(createBlockH1);
+			var createBlockH2 = document.createElement("input");
+			createBlockH2.setAttribute("id", "coor2");
+			createBlockH2.setAttribute("type", "hidden");
+			createBlockH2.setAttribute("value", tablica[1]);
+			element.appendChild(createBlockH2);
+		});
+		
+		
+};	
+
+function createWLoc(parentId) {
+	destField(parentId, 'wyborMiejsce');
+	destField(parentId, 'wyborMapa');
+	destField('search-bar', 'wyborGPSK');
+	destField('search-bar', 'wyborKategorii');
+	destField('search-bar', 'wyborPodkategorii');
+	var parentIdGetMain=document.getElementById(parentId);
+	var createBlock = document.createElement("div");
+	createBlock.setAttribute("id", "wyborMiejsce");
+	parentIdGetMain.appendChild(createBlock);
+	var createSentence = document.createElement("h4");
+	createSentence.innerHTML='Wprowadź nazwę miejscowości'
+	createBlock.appendChild(createSentence);
+	var createField = document.createElement("input");
+	createField.setAttribute("type", "text");
+	createField.setAttribute("name", "nameLoc");
+	createField.setAttribute("id", "WLoc");
+	createField.setAttribute("onblur", "createKategory('search-bar')");
+	createBlock.appendChild(createField);
+}
