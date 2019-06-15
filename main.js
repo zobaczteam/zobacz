@@ -1,3 +1,70 @@
+fbStat();
+
+function staMS(response) {
+	firebase.auth().onAuthStateChanged(user=>{ 
+		if(user || response.status=='connected'){
+			
+		} else{
+			if(!document.getElementById('login')) {
+				loginVisible();
+			}
+		}
+	});
+}
+
+function fbStat() {
+	if(typeof(FB) !== 'undefined') {
+		FB.getLoginStatus(function(response) {
+			staMS(response);
+		});
+	} else {
+		staMS('undefined');	
+	}
+}
+
+function logOut() {
+	firebase.auth().signOut();
+	console.log('logged out');
+	if (FB.getAccessToken() != null) {
+            FB.logout(function(response) {
+                
+            });
+        }
+	destField2('wrapper2');
+	destField2('menu-wrap');
+	if(!document.getElementById('login')) {
+		loginVisible();
+	}
+	
+	
+}
+
+function createContainer() {
+	var createBlockCont = document.createElement("div");
+	createBlockCont.setAttribute("id", "container");
+	createBlockCont.setAttribute("class", "container");
+	document.body.appendChild(createBlockCont);
+	
+	var createBlockWrapper = document.createElement("div");
+	createBlockWrapper.setAttribute("class", "wrapper");
+	createBlockCont.appendChild(createBlockWrapper);
+	
+	var createBlockFormMain = document.createElement("div");
+	createBlockFormMain.setAttribute("class", "form-main");
+	createBlockFormMain.setAttribute("id", "form-main");
+	createBlockWrapper.appendChild(createBlockFormMain);
+	
+}
+
+function sendFBLogin() {
+	if(typeof(FB) !== 'undefined') {
+		FB.login(function(response){
+			destField('form-main', 'login'); 
+			fbStat();
+		});
+	}
+}
+
 function sendLogin() {
 		var email = document.getElementById("stRegEmail").value;
 		var pass = document.getElementById("stRegPass").value;
@@ -22,7 +89,7 @@ function sendRegister() {
 				var errorCode = error.code;
 				var errorMessage = error.message;
 			});
-			loginVisible() ;
+			loginVisible();
 		}
 }
 
@@ -59,25 +126,40 @@ function showCheckedValue(wartosc, nazwaId, tekst) {
 }
   
 function destField(pFieldName, chFieldName) {
-	var chElem = document.getElementById(chFieldName);
 	var pElem = document.getElementById(pFieldName);
-	pElem.removeChild(chElem);
+	if(document.getElementById(chFieldName)) {
+		var chElem = document.getElementById(chFieldName);
+		pElem.removeChild(chElem);
+	}
+}
+
+function destField2(chFieldName) {
+	if(document.getElementById(chFieldName)) {
+		var chElem = document.getElementById(chFieldName);
+		document.body.removeChild(chElem);
+	}
 }
 
 function registerVisible() {
+	if ( !document.getElementById('container') ) {
+		createContainer();
+	}
 	destField('form-main', 'login'); 	
 	var cTag1 = document.createElement('div');
 	cTag1.setAttribute('id', 'register');
 	cTag1.setAttribute('class', 'visible');
-	cTag1.innerHTML = '<div class="form-header"><h1>Register</h1></div> <!-- <form action="#">  --> <p><input type="email" id="stRegEmail"  name="stEmail" placeholder="Email" onblur="checkEmail(this.value,\'logMailMesg\')"><p id="logMailMesg"></p></p><p><input type="password" id="stRegPass" name="stPass" placeholder="Password" onblur="checkPass(this.value,\'logPassMesg\')"><p id="logPassMesg"></p></p><p><button id="btnSendRegister" class="btn" onclick="sendRegister()">Register</button></p><p class="form-footer">Have account? <button id="btnChangeLogin" class="btn-footer" onclick="loginVisible()">Log In</button></p><!-- </form> -->';
+	cTag1.innerHTML = '<div class="form-header"><h1>Register</h1></div><p><input type="email" id="stRegEmail"  name="stEmail" placeholder="Email" onblur="checkEmail(this.value,\'logMailMesg\')"><p id="logMailMesg"></p></p><p><input type="password" id="stRegPass" name="stPass" placeholder="Password" onblur="checkPass(this.value,\'logPassMesg\')"><p id="logPassMesg"></p></p><p><button id="btnSendRegister" class="btn" onclick="sendRegister()">Register</button></p><p class="form-footer">Have account? <button id="btnChangeLogin" class="btn-footer" onclick="loginVisible()">Log In</button></p>';
 	document.getElementById('form-main').appendChild(cTag1);
 }
 
 function loginVisible() {
-	destField('form-main', 'register'); 	
+	if ( !document.getElementById('container') ) {
+		createContainer();
+	}
+	destField('form-main', 'register'); 
 	var cTag1 = document.createElement('div');
 	cTag1.setAttribute('id', 'login');
 	cTag1.setAttribute('class', 'visible');
-	cTag1.innerHTML = '<div class="form-header"><h1>Login</h1></div> <!-- <form action="#"> --> <p><input type="email" id="stRegEmail" name="stEmail" placeholder="Email" onblur="checkEmail(this.value,\'logMailMesg\')"><p id="logMailMesg"></p></p><p><input type="password" id="stRegPass" name="stPass" placeholder="Password" onblur="checkPass(this.value,\'logPassMesg\')"><p id="logPassMesg"></p></p><p><button id="btnSendLogin" class="btn" onclick="sendLogin()">Login</button></p><p class="form-footer">Don\'t have an account? <button id="btnChangeRegister" class="btn-footer" onclick="registerVisible()">Register</button></p> <!-- </form> -->';
+	cTag1.innerHTML = '<div class="form-header"><h1>Login</h1></div><p><input type="email" id="stRegEmail" name="stEmail" placeholder="Email" onblur="checkEmail(this.value,\'logMailMesg\')"><p id="logMailMesg"></p></p><p><input type="password" id="stRegPass" name="stPass" placeholder="Password" onblur="checkPass(this.value,\'logPassMesg\')"><p id="logPassMesg"></p></p><p><button id="btnSendLogin" class="btn" onclick="sendLogin()">Login</button></p><p><button id="btnSendFBLogin" class="btn" onclick="sendFBLogin()">Facebook login</button></p><p class="form-footer">Don\'t have account? <button id="btnChangeRegister" class="btn-footer" onclick="registerVisible()">Register</button></p>';
 	document.getElementById('form-main').appendChild(cTag1);
 }
