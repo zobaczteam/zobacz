@@ -466,3 +466,82 @@ function createWLoc(parentId) {
 	createField.setAttribute("onblur", "createKategory('search-bar')");
 	createBlock.appendChild(createField);
 }
+
+function createKategory(parentId) {
+	destField(parentId, 'wyborKategorii'); 
+	var parentIdGetMain=document.getElementById(parentId);
+	var createBlock = document.createElement("div");
+	createBlock.setAttribute("id", "wyborKategorii");
+	parentIdGetMain.appendChild(createBlock);
+	var createSentence = document.createElement("h4");
+	createSentence.innerHTML='Wybierz kategorię'
+	createBlock.appendChild(createSentence);
+		
+	var categories = [ "artwork_type", "historic", "museum", "tourism" ];
+		
+	var createSelect = document.createElement("select");
+	createSelect.setAttribute("name", "nazwaKategorii");
+	createSelect.setAttribute("id", "nazwaKategorii");
+	createBlock.appendChild(createSelect);
+	categories.forEach(wyswietlKategorie);
+}
+
+function wyswietlKategorie(wartosc) {
+	var createOption = document.createElement("option");
+	createOption.setAttribute("value", wartosc);
+	createOption.setAttribute("id", "opt"+wartosc);
+	createOption.setAttribute("onclick", "createSubKategory(this.value, 'search-bar')");
+	createOption.innerHTML=wartosc;
+	var parentIdGet=document.getElementById('nazwaKategorii');
+	parentIdGet.appendChild(createOption);
+}
+
+function createSubKategory(nazwaKategorii, parentId) {
+	destField(parentId, 'wyborPodkategorii'); 
+	var parentIdGetMain=document.getElementById(parentId);
+	var createBlock = document.createElement("div");
+	createBlock.setAttribute("id", "wyborPodkategorii");
+	parentIdGetMain.appendChild(createBlock);
+	var createSentence = document.createElement("h4");
+	createSentence.innerHTML='Wybierz podkategorię'
+	createBlock.appendChild(createSentence);
+	
+	if(document.getElementById('WLoc')) {
+		var nazwaMiasta=document.getElementById('WLoc').value;
+		pobierzPodkategorie1(nazwaKategorii, nazwaMiasta, createBlock) ;
+	} else if (document.getElementById('coor1') && document.getElementById('coor2')) {
+		var lat = document.getElementById('coor1').value;
+		var lon = document.getElementById('coor2').value;
+		pobierzPodkategorie2(nazwaKategorii, lon, lat, createBlock) ;
+	}
+}
+
+function pobierzPodkategorie1(nazwaKategorii, nazwaMiasta, parentId) {
+	
+	var pobPod = new XMLHttpRequest();
+	pobPod.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var dane=this.responseText;
+			var daneIlosc=dane.length;
+			var wynik=CSVDoTablicy(dane, '', daneIlosc);
+			podKatSel(wynik, parentId);
+		}
+	};
+	pobPod.open("GET", "https://www.overpass-api.de/api/interpreter?data=[out:csv('"+nazwaKategorii+"')][timeout:25];(area[name='"+nazwaMiasta+"'];)-%3E.searchArea;(node['"+nazwaKategorii+"'~'.*'](area.searchArea);relation['"+nazwaKategorii+"'~'.*'](area.searchArea););out%20body;", true);
+	pobPod.send();
+}
+
+function pobierzPodkategorie2(nazwaKategorii, lon, lat, parentId) {
+	
+	var pobPod = new XMLHttpRequest();
+	pobPod.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var dane=this.responseText;
+			var daneIlosc=dane.length;
+			var wynik=CSVDoTablicy(dane, '', daneIlosc);
+			podKatSel(wynik, parentId);
+		}
+	};
+	pobPod.open("GET", "https://www.overpass-api.de/api/interpreter?data=[out:csv('"+nazwaKategorii+"')][timeout:25];rel['"+nazwaKategorii+"'](around:5000, "+lon+", "+lat+");out%20body;%3E;out%20skel%20qt;", true);
+	pobPod.send();
+}
