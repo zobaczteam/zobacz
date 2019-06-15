@@ -275,3 +275,19 @@ function mainFuncSite() {
 	createBlock9.setAttribute("id", "wiki");
 	createBlock5.appendChild(createBlock9);
 }
+
+function checkChecked(wartosc) {
+	if (wartosc=="wybLista") {
+		createWLoc('search-bar');
+		document.getElementById("wybMap").removeAttribute("checked");
+		//document.getElementById("wybGPS").removeAttribute("checked");
+	} else if (wartosc=="wybMap") {
+		createBMap('search-bar');
+		//document.getElementById("wybGPS").removeAttribute("checked");
+		document.getElementById("wybLista").removeAttribute("checked");
+	} else  if (wartosc=="wybGPS") {
+		getLocGPS();
+		document.getElementById("wybLista").removeAttribute("checked");
+		document.getElementById("wybMap").removeAttribute("checked");
+	}
+}
